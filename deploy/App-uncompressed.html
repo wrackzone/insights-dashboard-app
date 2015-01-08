@@ -36,7 +36,7 @@ Ext.define('CustomApp', {
 
 		var project   = this.getContext().getProject()["ObjectID"];
 		var workspace = this.getContext().getWorkspace()["ObjectID"];
-		var lastMonth = moment().subtract(1,'months');
+		var lastMonth = moment(); // moment().subtract(1,'months');
 		var firstMonth = moment().subtract(7,'months');
 
 		var baseUrl = "https://rally1.rallydev.com/insight/data";
@@ -120,7 +120,7 @@ Ext.define('CustomApp', {
 					// type: 'boxplot'
                 },
                 title: {
-                text: 'Story/Defect Cycle Time',
+                text: 'Story/Defect Time In Process',
                 x: -20 //center
                 },
                 plotOptions: {
