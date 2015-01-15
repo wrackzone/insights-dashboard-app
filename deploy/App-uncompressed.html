@@ -74,12 +74,12 @@ Ext.define('CustomApp', {
     	var scope = _.find(obj["scopes"],function(scope) {
     		return scope["type"] === "project";
     	});
-		var months = scope["months"];
+		var months = scope["timePeriods"];
 
-    	console.log("datapoints",scope["dataPoints"].length);
+    	console.log("datapoints",scope["dataPoints"].length,"months",months);
 
     	var series = [];
-    	series.push({name:"label", data : _.map(months,function(m){ return moment(m,"YYYY-MM").toDate()})});
+    	series.push({name:"label", data : _.map(months,function(m){ console.log("month:",m);return moment(m,"YYYY-MM").toDate()})});
 
     	_.each(metrics,function(metric){
     		series.push({
