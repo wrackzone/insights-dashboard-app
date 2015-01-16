@@ -17,6 +17,9 @@ Ext.define('CustomApp', {
 
         app = this;
 
+        app.valueKeys = ["P50","P75","P95","P99"];
+
+
         app.myMask = new Ext.LoadMask(Ext.getBody(), {msg:"Please wait..."});
 
         app.myMask.show();
@@ -27,16 +30,21 @@ Ext.define('CustomApp', {
 		//&projects=<projectID>&
 		//start-date=<yyyy-mm>&end-date=<yyyy-mm>&workspaces=<workspaceID>
 
-		var metrics = [
+		app.metrics = [
+            "TimeInProcessFeatureStart0StdDev",
+            "TimeInProcessFeatureStart0P50",
+            "TimeInProcessFeatureStart0P75",
+            "TimeInProcessFeatureStart0P95",
+            "TimeInProcessFeatureStart0",
+            "TimeInProcessFeatureStart0P99"
 			// "TimeInProcessStoryAndDefectP50",
 			// "TimeInProcessStoryAndDefectP75",
 			// "TimeInProcessStoryAndDefectP95",
 			// "TimeInProcessStoryAndDefectP99"
-            "TimeInProcessStoryP50",
-            "TimeInProcessStoryP75",
-            "TimeInProcessStoryP95",
-            "TimeInProcessStoryP99"
-
+            // "TimeInProcessStoryP50",
+            // "TimeInProcessStoryP75",
+            // "TimeInProcessStoryP95",
+            // "TimeInProcessStoryP99"
 		];
 
 
@@ -50,7 +58,7 @@ Ext.define('CustomApp', {
 
 		var granularity = "month";
 
-		var url = baseUrl + "?" + "granularity=" + granularity + "" + "&metrics=" + metrics.join() + 
+		var url = baseUrl + "?" + "granularity=" + granularity + "" + "&metrics=" + app.metrics.join() + 
 					"&projects=" + project + 
 					"&workspaces=" + workspace + 
 					"&start-date=" + firstMonth.format("YYYY-MM") + 
@@ -71,6 +79,31 @@ Ext.define('CustomApp', {
 		   }
 		});
 
+    },
+
+    keysFromMetrics : function(metrics,keys) {
+
+        var obj = {};
+        _.each(keys,function(k){
+            obj[k] = _.find( metrics, function(m) { return m.indexOf(k)!==-1;});
+        })
+
+        return obj;
+
+    },
+
+    valuesFromDataPoint : function(datapoint) {
+
+        var template = app.keysFromMetrics(app.metrics,app.valueKeys);
+
+        var obj = _.mapValues( template, function(v) { 
+            console.log(template,datapoint,v);
+            return datapoint.data[v].value
+        });
+
+        console.log("obj:",obj);
+
+        return obj;
     },
 
     createSeriesFromObject : function(obj) {
@@ -119,15 +152,14 @@ Ext.define('CustomApp', {
                 series : [ {
                     name : 'Cycle Times',
                     data:  _.map(series, function(s) { 
+                        var obj = app.valuesFromDataPoint(s);
                         return {
                             // x : moment( s.month, "YYYY-MM").toDate(),
-                            low : 0,
-                            q1 : 0,
-                            median : s.data.TimeInProcessStoryP50.value,
-                            q3 : s.data.TimeInProcessStoryP75.value,
-                            high : s.data.TimeInProcessStoryP99.value
-                            
-                            // s.data.TimeInProcessStoryAndDefectP99.value
+                            low    : 0,
+                            q1     : 0,
+                            median : obj.P50,
+                            q3     : obj.P75,
+                            high   : obj.P99
                         };
                     }),
                     tooltip: {
@@ -139,7 +171,8 @@ Ext.define('CustomApp', {
                     color: 'black',
                     type: 'scatter',
                     data: _.map(series,function(s,i){
-                        return [i,s.data.TimeInProcessStoryP95.value]
+                        var obj = app.valuesFromDataPoint(s);
+                        return [i,obj.P95]
                     }),
                     marker: {
                     fillColor: 'white',
@@ -182,7 +215,7 @@ Ext.define('CustomApp', {
 					type: 'boxplot'
                 },
                 title: {
-                text: 'Story/Defect Time In Process',
+                text: app.metrics[0],
                 x: -20 //center
                 },
                 plotOptions: {
