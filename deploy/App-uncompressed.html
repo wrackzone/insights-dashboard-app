@@ -28,11 +28,18 @@ Ext.define('CustomApp', {
 		//start-date=<yyyy-mm>&end-date=<yyyy-mm>&workspaces=<workspaceID>
 
 		var metrics = [
-			"TimeInProcessStoryAndDefectP50",
-			"TimeInProcessStoryAndDefectP75",
-			"TimeInProcessStoryAndDefectP95",
-			"TimeInProcessStoryAndDefectP99"
+			// "TimeInProcessStoryAndDefectP50",
+			// "TimeInProcessStoryAndDefectP75",
+			// "TimeInProcessStoryAndDefectP95",
+			// "TimeInProcessStoryAndDefectP99"
+            "TimeInProcessStoryP50",
+            "TimeInProcessStoryP75",
+            "TimeInProcessStoryP95",
+            "TimeInProcessStoryP99"
+
 		];
+
+
 
 		var project   = this.getContext().getProject()["ObjectID"];
 		var workspace = this.getContext().getWorkspace()["ObjectID"];
@@ -108,33 +115,71 @@ Ext.define('CustomApp', {
             itemId : "chart1",
             chartData: {
                 categories : _.map(series, function(s){ return moment(s.month,"YYYY-MM").toDate()}),
-                series : [{
-                    name: 'Median',
-                    type: 'column',
-                    // yAxis: 1,
-                    data: _.map(series, function(s) { return s.data.TimeInProcessStoryAndDefectP50.value;}),
-                    tooltip: {
-                        pointFormat: '<span style="font-weight: bold; color: {series.color}">{series.name}</span>: <b>{point.y:.1f}</b> '
-                    }
-                },{
-                    name: 'P75/P95/P99',
-                    type: 'errorbar',
-                    // yAxis: 1,
+                
+                series : [ {
+                    name : 'Cycle Times',
                     data:  _.map(series, function(s) { 
-                        return [
-                            s.data.TimeInProcessStoryAndDefectP75.value,
-                            s.data.TimeInProcessStoryAndDefectP99.value
-                        ];}),
+                        return {
+                            // x : moment( s.month, "YYYY-MM").toDate(),
+                            low : 0,
+                            q1 : 0,
+                            median : s.data.TimeInProcessStoryP50.value,
+                            q3 : s.data.TimeInProcessStoryP75.value,
+                            high : s.data.TimeInProcessStoryP99.value
+                            
+                            // s.data.TimeInProcessStoryAndDefectP99.value
+                        };
+                    }),
                     tooltip: {
-                        pointFormat: '(range: P75 ({point.low:.1f}) - P99 ({point.high:.1f}))<br/>'
+                        headerFormat: '<em>Experiment No {point.key}</em><br/>'
                     }
-                }]
+                },
+                {
+                    name: 'P95',
+                    color: 'black',
+                    type: 'scatter',
+                    data: _.map(series,function(s,i){
+                        return [i,s.data.TimeInProcessStoryP95.value]
+                    }),
+                    marker: {
+                    fillColor: 'white',
+                    lineWidth: 1,
+                    lineColor: 'black'
+                    },
+                    tooltip: {
+                        pointFormat: 'Observation: {point.y:.1f}'
+                    }
+                }
+
+
+                // {
+                //     name: 'Median',
+                //     type: 'column',
+                //     // yAxis: 1,
+                //     data: _.map(series, function(s) { return s.data.TimeInProcessStoryAndDefectP50.value;}),
+                //     tooltip: {
+                //         pointFormat: '<span style="font-weight: bold; color: {series.color}">{series.name}</span>: <b>{point.y:.1f}</b> '
+                //     }
+                // },{
+                //     name: 'P75/P95/P99',
+                //     type: 'errorbar',
+                //     // yAxis: 1,
+                //     data:  _.map(series, function(s) { 
+                //         return [
+                //             s.data.TimeInProcessStoryAndDefectP75.value,
+                //             s.data.TimeInProcessStoryAndDefectP99.value
+                //         ];}),
+                //     tooltip: {
+                //         pointFormat: '(range: P75 ({point.low:.1f}) - P99 ({point.high:.1f}))<br/>'
+                //     }
+                // }
+                ]
             },
 
             chartConfig : {
             	// series : series,
                 chart: {
-					// type: 'boxplot'
+					type: 'boxplot'
                 },
                 title: {
                 text: 'Story/Defect Time In Process',
