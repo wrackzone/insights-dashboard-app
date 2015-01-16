@@ -68,6 +68,15 @@ Ext.define('CustomApp', {
 
     createSeriesFromObject : function(obj) {
 
+        /* 
+        endDate: "2015-01"
+        granularity: "month"
+        metrics: Array[4]
+        scopes: Array[2]
+        startDate: "2014-06"
+        timePeriods: Array[7]
+        */
+
     	var metrics = obj["metrics"];
 
     	// get the project scope
@@ -78,26 +87,14 @@ Ext.define('CustomApp', {
 
     	console.log("datapoints",scope["dataPoints"].length,"months",months);
 
-    	var series = [];
-    	series.push({name:"label", data : _.map(months,function(m){ console.log("month:",m);return moment(m,"YYYY-MM").toDate()})});
-
-    	_.each(metrics,function(metric){
-    		series.push({
-    			name:metric, 
-    			data: _.map(scope["dataPoints"],function(point) {
-    				return Math.round(point["data"][metric]["value"]*100)/100;
-    			})
-    		})
-    	});
-
-    	return series;
+    	return scope["dataPoints"];
     },
 
     showChart : function(series) {
 
     	console.log("series",series);
 
-    	console.log(_.map(series,function(s) { return s["name"];}));
+    	// console.log(_.map(series,function(s) { return s["name"];}));
 
         var that = this;
         
@@ -110,8 +107,28 @@ Ext.define('CustomApp', {
             // columnWidth : 1,
             itemId : "chart1",
             chartData: {
-                categories : series[0].data,
-                series : series.slice(1, series.length)
+                categories : _.map(series, function(s){ return moment(s.month,"YYYY-MM").toDate()}),
+                series : [{
+                    name: 'Median',
+                    type: 'column',
+                    // yAxis: 1,
+                    data: _.map(series, function(s) { return s.data.TimeInProcessStoryAndDefectP50.value;}),
+                    tooltip: {
+                        pointFormat: '<span style="font-weight: bold; color: {series.color}">{series.name}</span>: <b>{point.y:.1f}</b> '
+                    }
+                },{
+                    name: 'P75/P95/P99',
+                    type: 'errorbar',
+                    // yAxis: 1,
+                    data:  _.map(series, function(s) { 
+                        return [
+                            s.data.TimeInProcessStoryAndDefectP75.value,
+                            s.data.TimeInProcessStoryAndDefectP99.value
+                        ];}),
+                    tooltip: {
+                        pointFormat: '(range: P75 ({point.low:.1f}) - P99 ({point.high:.1f}))<br/>'
+                    }
+                }]
             },
 
             chartConfig : {
@@ -134,7 +151,7 @@ Ext.define('CustomApp', {
                     type: 'datetime',
                     labels: {
                         formatter: function() {
-                            return Highcharts.dateFormat('%b', Date.parse(this.value));
+                            return Highcharts.dateFormat('%b %Y', Date.parse(this.value));
                         }
                     }
                 },
